@@ -21,9 +21,9 @@
 #endif
 
 // ---------------- ピン ----------------
-constexpr int PIN_I2S_BCK  = 26;   // PCM5102 BCK
-constexpr int PIN_I2S_WS   = 25;   // PCM5102 LCK
-constexpr int PIN_I2S_DATA = 22;   // PCM5102 DIN
+constexpr int MY_I2S_BCK  = 26;   // PCM5102 BCK
+constexpr int MY_I2S_WS   = 25;   // PCM5102 LCK
+constexpr int MY_I2S_DATA = 22;   // PCM5102 DIN
 
 constexpr int PIN_TFT_SCLK = 18;   // 基板: SCL
 constexpr int PIN_TFT_MOSI = 23;   // 基板: SDA
@@ -617,9 +617,9 @@ void setup() {
 #endif
 
   auto cfg = i2s.defaultConfig();
-  cfg.pin_bck  = PIN_I2S_BCK;
-  cfg.pin_ws   = PIN_I2S_WS;
-  cfg.pin_data = PIN_I2S_DATA;
+  cfg.pin_bck  = MY_I2S_BCK;
+  cfg.pin_ws   = MY_I2S_WS;
+  cfg.pin_data = MY_I2S_DATA;
   i2s.begin(cfg);
 
   a2dp_sink.set_avrc_metadata_attribute_mask(
