@@ -43,9 +43,10 @@ Btn btns[] = {
 
 // ---------------- TFT調整値 ----------------
 constexpr int  TFT_OFFSET_X = 82;
-constexpr int  TFT_OFFSET_Y = 0;
+constexpr int  TFT_OFFSET_Y = 18;    // 右端がノイズなら増やす / 左端が欠けるなら減らす（'c'キーで確認）
 constexpr int  TFT_ROT      = 1;      // 向きが逆なら3
-constexpr bool TFT_INVERT   = true;   // 色が反転して見えたらfalse
+constexpr bool TFT_INVERT   = false;  // 色が反転して見えたら切り替える（今回の基板はfalseが正）
+constexpr bool TFT_BL_ACTIVE_LOW = true;   // BLがLowで点灯する基板ならtrue（Highで点灯ならfalse）
 
 // ---------------- イコライザ調整値 ----------------
 constexpr float EQ_DB_MIN  = -60.0f;  // これ以下は0
@@ -488,7 +489,7 @@ void drawCalibration() {
   tft.fillRect(0, h - 8, 8, 8, lgfx::color565(0, 0, 255));
   tft.fillRect(w - 8, h - 8, 8, 8, lgfx::color565(255, 255, 255));
   char buf[32];
-  snprintf(buf, sizeof(buf), "%d x %d  ST7789", w, h);
+  snprintf(buf, sizeof(buf), "%dx%d off %d,%d", w, h, TFT_OFFSET_X, TFT_OFFSET_Y);
   tft.setFont(&lgfx::fonts::lgfxJapanGothic_16);
   tft.setTextColor(C_TITLE, C_BG);
   tft.drawString(buf, (w - tft.textWidth(buf)) / 2, h / 2 - 8);
@@ -496,7 +497,9 @@ void drawCalibration() {
 
 void tftSetup() {
   pinMode(PIN_TFT_BL, OUTPUT);
-  digitalWrite(PIN_TFT_BL, HIGH);
+  digitalWrite(PIN_TFT_BL, TFT_BL_ACTIVE_LOW ? LOW : HIGH);   // バックライト点灯
+  Serial.printf("[TFT] backlight: GPIO%d = %s (active-%s)\n", PIN_TFT_BL,
+                TFT_BL_ACTIVE_LOW ? "LOW" : "HIGH", TFT_BL_ACTIVE_LOW ? "low" : "high");
   tft.init();
   tft.setRotation(TFT_ROT);
   Serial.printf("[TFT] init done: %d x %d (offset %d,%d)  ※接続の有無は検出不可（未接続でもエラーにならない）\n",
@@ -554,6 +557,7 @@ void printHelp() {
   Serial.println(" space : 再生/一時停止   n : 次の曲   p : 前の曲");
   Serial.println(" + / - : 音量 上げ/下げ  s : 状態表示   e : EQ数値の表示 切替");
   Serial.println(" d     : デモ表示 切替（スマホ不要でTFTを確認）");
+  Serial.println(" c     : TFTの表示位置確認パターンを4秒表示");
   Serial.println(" h     : このヘルプ");
   Serial.println("--------------------------");
 }
@@ -570,6 +574,15 @@ void handleSerial(uint32_t now) {
       case 's': printStatus(now); break;
       case 'e': eqPrint = !eqPrint; Serial.printf("[EQ] 数値表示 %s\n", eqPrint ? "ON" : "OFF"); break;
       case 'd': setDemo(!demoMode, now); break;
+      case 'c':
+#if USE_TFT
+        Serial.println("[TFT] 表示位置確認パターンを4秒表示");
+        drawCalibration();
+        delay(4000);
+        tft.fillScreen(C_BG);
+        textDirty = true;
+#endif
+        break;
       case 'h': case '?': printHelp(); break;
       default: break;
     }
